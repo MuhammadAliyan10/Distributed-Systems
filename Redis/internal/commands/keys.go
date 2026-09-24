@@ -7,6 +7,7 @@ import (
 
 func RegisterKeyCommands(r *Registry) {
 	r.Register("DEL", delCommand)
+	r.Register("PING", pingCommand)
 }
 
 func delCommand(args []resp.Value, db storage.Engine) resp.Value {
@@ -20,4 +21,8 @@ func delCommand(args []resp.Value, db storage.Engine) resp.Value {
 	}
 
 	return resp.Value{Type: "integer", Num: deletedCount}
+}
+
+func pingCommand(args []resp.Value, db storage.Engine) resp.Value{
+return resp.Value{Type: "string", Str: "PONG"}
 }
