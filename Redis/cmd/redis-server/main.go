@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"redis/internal/commands"
+	"redis/internal/replication"
 	"redis/internal/resp"
 	"redis/internal/server"
 	"redis/internal/storage/aof"
@@ -57,7 +58,9 @@ func main(){
 	}
 defer aofLog.Close()
 
-svr := server.NewServer(":6379", db, aofLog, registry)
+broker := replication.NewBroker()
+
+svr := server.NewServer(":6379", db, aofLog, registry,broker)
 err = svr.Start()
 
 

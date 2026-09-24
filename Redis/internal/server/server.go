@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"redis/internal/commands"
+	"redis/internal/replication"
 	"redis/internal/storage"
 	"redis/internal/storage/aof"
 )
@@ -14,15 +15,17 @@ type Server struct{
 	db storage.Engine
 	registry *commands.Registry
 	aofLog *aof.AOF
+	broker *replication.Broker
 }
 
 
-func NewServer(addr string, db storage.Engine, aofLog *aof.AOF, registry *commands.Registry) *Server{
+func NewServer(addr string, db storage.Engine, aofLog *aof.AOF, registry *commands.Registry, broker *replication.Broker) *Server{
 	return &Server{
 		addr: addr,
 		db: db,
 		registry: registry,
 		aofLog: aofLog,
+		broker: broker,
 	}
 }
 

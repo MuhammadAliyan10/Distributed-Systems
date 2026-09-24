@@ -17,3 +17,15 @@ $3
 DEL
 $7
 company
+*3
+$3
+SET
+$16
+distributed_test
+$8
+SUCCESS!
+*2
+$3
+DEL
+$16
+distributed_test

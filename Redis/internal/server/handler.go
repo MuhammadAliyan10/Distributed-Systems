@@ -34,13 +34,22 @@ func (s *Server) handleConnection(conn net.Conn){
 
 		cmdName := value.Array[0].Bulk
 
+		if cmdName == "SYNC" {
+			s.broker.AddReplica(conn)
+			writer.WriteSimpleString("OK SYNCING")
+
+			continue
+		}
+
 		args := value.Array[1:]
 
 		result := s.registry.Execute(cmdName, args, s.db)
 
 		if result.Type != "error" && (cmdName == "SET" || cmdName == "DEL"){
-rawBytes := marshalRESPArray(value.Array)
-s.aofLog.Write(rawBytes)
+				rawBytes := marshalRESPArray(value.Array)
+				s.aofLog.Write(rawBytes)
+
+		   	s.broker.Broadcast(rawBytes)
 		}
 
 		err = s.writeResult(writer, result)
