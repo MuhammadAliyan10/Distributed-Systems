@@ -14,4 +14,6 @@ type Engine interface {
 	Get(key string) (Value, bool)
 	Set(key string, value []byte, ttl time.Duration)
 	Del(key string) int
+
+	Iterate(callback func(key string, value Value))
 }

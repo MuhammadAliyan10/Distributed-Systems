@@ -41,6 +41,16 @@ func (s *Server) handleConnection(conn net.Conn){
 			continue
 		}
 
+		if cmdName == "BGREWRITEAOF"{
+			err := s.aofLog.Rewrite(s.db)
+			if err != nil{
+				writer.WriteError("ERR " + err.Error())
+			} else {
+				writer.WriteSimpleString("OK REWRITE COMPLETE")
+			}
+			continue
+		}
+
 		args := value.Array[1:]
 
 		result := s.registry.Execute(cmdName, args, s.db)

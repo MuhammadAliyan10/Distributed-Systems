@@ -95,3 +95,18 @@ func (s *Store) Del(key string) int{
 	}
 	return 0
 }
+
+
+func (s *Store) Iterate(callback func(key string, val storage.Value)){
+	for _, shard := range s.shards{
+		shard.mu.RLock()
+
+		for key, val := range shard.data{
+			if !val.ExpiresAt.IsZero() && time.Now().After(val.ExpiresAt){
+				continue
+			}
+			callback(key, val)
+		}
+		shard.mu.RUnlock()
+	}
+}
