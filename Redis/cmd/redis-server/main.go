@@ -2,6 +2,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -20,13 +21,20 @@ import (
 
 func main(){
 
+	port := flag.String("port", "6379", "Port to run the server on")
+replicaOf := flag.String("replicaof", "", "Master address to replicate from")
+flag.Parse()
+
+	aofFileName := "database_"+ *port + ".aof"
 	db := memory.NewStore()
 	registry := commands.NewRegistry()
 	commands.RegisterStringsCommand(registry)
 	commands.RegisterKeyCommands(registry)
 
 
-	f, err := os.Open("database.aof")
+
+
+	f, err := os.Open(aofFileName)
 
 	if err == nil {
 		fmt.Println("Restoring database from AOF log...")
@@ -51,16 +59,21 @@ func main(){
 		fmt.Println("Database restored successfully.")
 	}
 
-	aofLog, err := aof.NewAOF("database.aof")
+	aofLog, err := aof.NewAOF(aofFileName)
 	if err !=nil{
-		fmt.Println("Failed to initialize AOF:", err)
-		os.Exit(1)
+		panic(err)
+
 	}
 defer aofLog.Close()
 
 broker := replication.NewBroker()
 
-svr := server.NewServer(":6379", db, aofLog, registry,broker)
+svr := server.NewServer(":"+*port, db, aofLog, registry,broker)
+
+if *replicaOf != ""{
+	go svr.StartReplicaClient(*replicaOf)
+}
+fmt.Println("Redis is running on :" + *port)
 err = svr.Start()
 
 

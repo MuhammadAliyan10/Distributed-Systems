@@ -51,6 +51,12 @@ func (s *Server) handleConnection(conn net.Conn){
 			continue
 		}
 
+		if cmdName == "PROMOTE"{
+			writer.WriteSimpleString("OK PROMOTED TO MASTER")
+
+			continue
+		}
+
 		args := value.Array[1:]
 
 		result := s.registry.Execute(cmdName, args, s.db)

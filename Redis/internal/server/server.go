@@ -6,6 +6,7 @@ import (
 	"net"
 	"redis/internal/commands"
 	"redis/internal/replication"
+	"redis/internal/resp"
 	"redis/internal/storage"
 	"redis/internal/storage/aof"
 )
@@ -50,4 +51,34 @@ continue
 
 		go s.handleConnection(conn)
 	}
+}
+
+
+func (s *Server) StartReplicaClient(masterAddr string){
+	fmt.Println("Booting in Replica Mode. Connecting to Master at", masterAddr)
+
+	conn, err := net.Dial("tcp", masterAddr)
+
+	if err != nil{
+		fmt.Println("Replica failed to connect to master:", err)
+		return
+	}
+conn.Write([]byte("*1\r\n$4\r\nSYNC\r\n"))
+parser := resp.NewParser(conn)
+
+parser.Read()
+fmt.Println("Synced with Master! Listening for broadcasts...")
+
+for {
+	val, err := parser.Read()
+	if err != nil{
+		fmt.Println("Lost connection to Master.")
+			break
+	}
+
+	cmdName := val.Array[0].Bulk
+	args := val.Array[1:]
+	s.registry.Execute(cmdName, args, s.db)
+}
+
 }

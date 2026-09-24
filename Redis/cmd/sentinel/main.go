@@ -23,13 +23,16 @@ for {
 
 		replicaConn, replErr := net.Dial("tcp", "127.0.0.1:6380")
 		if replErr == nil{
-			replicaConn.Write([]byte("PROMOTE"))
-				fmt.Println("Failover Complete! Replica has been promoted to Master.")
+		replicaConn.Write([]byte("*1\r\n$7\r\nPROMOTE\r\n"))
+			fmt.Println("Failover Complete! Replica has been promoted to Master.")
 			replicaConn.Close()
+
+			masterAddress = "127.0.0.1:6380"
+			continue
 		}else{
 			fmt.Println("FATAL: Replica is also down. Cluster is dead.")
 		}
-		break
+
 
 
 	}
