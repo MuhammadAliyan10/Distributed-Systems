@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"redis/internal/resp"
+	"strconv"
 )
 
 
@@ -37,6 +38,11 @@ func (s *Server) handleConnection(conn net.Conn){
 
 		result := s.registry.Execute(cmdName, args, s.db)
 
+		if result.Type != "error" && (cmdName == "SET" || cmdName == "DEL"){
+rawBytes := marshalRESPArray(value.Array)
+s.aofLog.Write(rawBytes)
+		}
+
 		err = s.writeResult(writer, result)
 
 if err != nil {
@@ -66,4 +72,22 @@ func (s *Server) writeResult(w *resp.Writer, result resp.Value) error {
 	default:
 		return w.WriteError("ERR unknown result type")
 	}
+}
+
+
+func marshalRESPArray(array []resp.Value) []byte{
+	var result []byte
+	result = append(result, '*')
+	result = append(result, strconv.Itoa(len(array))...)
+	result = append(result,'\r', '\n' )
+
+	for _, val := range array {
+		result = append(result, '$')
+		result = append(result, strconv.Itoa(len(val.Bulk))...)
+			result = append(result, '\r', '\n')
+		result = append(result, val.Bulk...)
+		result = append(result, '\r', '\n')
+
+	}
+		return result
 }
